@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include( "${CMAKE_CURRENT_LIST_DIR}/flexbpeTargets.cmake" )
+
+# preferred way of getting pthreads
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+

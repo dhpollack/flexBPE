@@ -2,7 +2,7 @@
 
 ## Description
 
-Right now this is basically just a copy of [fastBPE](https://github.com/glample/fastBPE) with cmake files for compiling and no python interface.  Eventually the idea is to make a more flexible version of fastBPE to be included in other cmake projects.
+Right now this is basically just a copy of [fastBPE](https://github.com/glample/fastBPE) with cmake files for compiling and no python interface.  Eventually the idea is to make a more flexible BPE library that's still fast like fastBPE which can easily be included in other cmake projects.
 
 ## Installation
 
