@@ -15,9 +15,9 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 # set some properties
 set_target_properties(flexbpe-bin PROPERTIES OUTPUT_NAME "flexbpe")
 set_target_properties(flexbpe PROPERTIES 
-	                              VERSION ${PROJECT_VERSION} 
-                                      SOVERSION 0
-                                      PUBLIC_HEADER flexBPE.h)
+	                      VERSION ${PROJECT_VERSION} 
+                              SOVERSION 0
+                              PUBLIC_HEADER flexBPE.h)
 
 # makes working with subdirectories easier, but right now not used
 target_include_directories(flexbpe PRIVATE .)
@@ -25,14 +25,16 @@ target_include_directories(flexbpe PRIVATE .)
 # install
 include(GNUInstallDirs)
 install(TARGETS flexbpe
+        EXPORT flexbpeTargets
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(TARGETS flexbpe-bin
 	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(TARGETS flexbpe
-        EXPORT flexbpeTargets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+#install(TARGETS flexbpe
+#        EXPORT flexbpeTargets
+#        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 # preferred way of getting pthreads
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
