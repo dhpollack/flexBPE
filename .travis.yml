@@ -1,0 +1,21 @@
+language: cpp
+dist: bionic
+
+compiler: gcc
+
+before_install:
+    - sudo apt-get update
+    - sudo apt-get -y install cmake build-essential pkg-config libgoogle-perftools-dev libboost-all-dev wget unzip
+
+before_script:
+    - ./scripts/get_data.sh
+    - ./scripts/get_third_party.sh
+    - source compile.dev 
+    - mkdir build
+    - cd build
+    - cmake ..
+
+script: 
+    - make
+
+
