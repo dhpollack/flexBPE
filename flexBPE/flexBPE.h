@@ -23,16 +23,6 @@ namespace flexBPE {
 
 using namespace std;
 
-int safeOpen(const char *file_path, int flags, mode_t mode);
-
-void readText(const char *fp, unordered_map<string, uint32_t> &word_count);
-
-std::pair<size_t, uint64_t> output_or_count(unordered_map<string, string> &bpe,
-                                            size_t size, char *f, char *fo);
-
-void outputText(const char *fpo, const char *fp,
-                unordered_map<string, string> &bpe);
-
 struct pair_hash {
   template <class T1, class T2> size_t operator()(const pair<T1, T2> &p) const {
     auto h1 = hash<T1>{}(p.first);
@@ -43,6 +33,20 @@ struct pair_hash {
   }
 };
 
+using tp = pair<uint32_t, uint32_t>;
+using tps = pair<string, string>;
+using pc = unordered_map<tp, pair<int32_t, tp> *, pair_hash>;
+
+int safeOpen(const char *file_path, int flags, mode_t mode);
+
+void readText(const char *fp, unordered_map<string, uint32_t> &word_count);
+
+std::pair<size_t, uint64_t> output_or_count(unordered_map<string, string> &bpe,
+                                            size_t size, char *f, char *fo);
+
+void outputText(const char *fpo, const char *fp,
+                unordered_map<string, string> &bpe);
+
 void tokenize(const unordered_map<string, uint32_t> &word_count,
               unordered_map<string, uint32_t> &token_to_int,
               vector<string> &int_to_token, vector<list<uint32_t>> &words,
@@ -50,10 +54,6 @@ void tokenize(const unordered_map<string, uint32_t> &word_count,
 
 void tokenize_str(const unordered_map<string, uint32_t> &word_count,
                   unordered_map<string, vector<string>> &words);
-
-using tp = pair<uint32_t, uint32_t>;
-using tps = pair<string, string>;
-using pc = unordered_map<tp, pair<int32_t, tp> *, pair_hash>;
 
 void count_in_word(
     list<uint32_t> &word, uint32_t wi, uint32_t count, pc &pair_counts,
