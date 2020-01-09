@@ -624,34 +624,7 @@ string BPETrainer::apply(string &sentence) {
 vector<string> BPETrainer::apply(vector<string> &sentences) {
   vector<string> res;
   for (auto &s : sentences) {
-    /*
     res.emplace_back(apply(s));
-    */
-    res.emplace_back("");
-    string &cur = res.back();
-    vector<string> words;
-    split(words, s, ' ');
-    for (size_t i = 0; i < words.size(); i++) {
-      auto word = words[i];
-      vector<string> word_bpes;
-      int pos = 0, realLength = 0;
-      int lastStart = 0;
-      while (word[pos]) {
-        bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
-        realLength += newChar;
-        if (newChar && pos > 0) {
-          auto new_token = word.substr(lastStart, pos - lastStart);
-          word_bpes.push_back(new_token);
-          lastStart = pos;
-        }
-        pos++;
-      }
-      auto bpe = word.substr(lastStart, string::npos) + jEndWord;
-      word_bpes.push_back(bpe);
-      cur += process_bpe(word_bpes);
-      if (i < words.size() - 1)
-        cur += " ";
-    }
   }
   return res;
 }
