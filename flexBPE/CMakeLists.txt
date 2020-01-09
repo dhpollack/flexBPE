@@ -38,4 +38,3 @@ find_package(Threads REQUIRED)
 target_link_libraries(flexbpe Threads::Threads)
 # link executable to shared library and threads
 target_link_libraries(flexbpe-bin flexbpe Threads::Threads)
-
