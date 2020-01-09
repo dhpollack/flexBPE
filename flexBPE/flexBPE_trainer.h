@@ -55,7 +55,7 @@ public:
 
   void applybpe_stream();
 
-  void readVocab(const char *fp, unordered_map<string, uint32_t> vocab);
+  void readVocab(const char *fp, unordered_map<string, uint32_t> &vocab);
 
   void readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
                  unordered_map<string, tps> &reversed_codes);
@@ -110,4 +110,4 @@ public:
                                          int(thread::hardware_concurrency()))));
 };
 
-} // namespace flexBPE
+} // end namespace flexBPE

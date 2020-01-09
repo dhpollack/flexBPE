@@ -8,8 +8,11 @@ const size_t kMaxPairs = 1000 * 1000 * 1000;
 BPETrainer::BPETrainer(const char *jEndWord, const size_t jEndWordLength,
                        const char *jTokenDelim, const size_t jTokenDelimLength,
                        const size_t jThreads)
-    : jThreads(jThreads), jEndWord(jEndWord), jEndWordLength(jEndWordLength),
-      jTokenDelim(jTokenDelim), jTokenDelimLength(jTokenDelimLength) {}
+    : jThreads(jThreads),
+      jEndWord(jEndWord),
+      jEndWordLength(jEndWordLength),
+      jTokenDelim(jTokenDelim),
+      jTokenDelimLength(jTokenDelimLength) {}
 
 int BPETrainer::safeOpen(const char *file_path, int flags, mode_t mode = 0) {
   int fd = open(file_path, flags, mode);
@@ -26,8 +29,7 @@ void BPETrainer::readText(const char *fp,
   uint64_t total = 0;
   auto deal_with_char = [&](char cur_char) {
     if (cur_char == ' ' || cur_char == '\n') {
-      if (cur_word.size() == 0)
-        return;
+      if (cur_word.size() == 0) return;
       // end of word
       auto it = word_count.find(cur_word);
       int count = it != word_count.end() ? it->second : 0;
@@ -66,9 +68,8 @@ void BPETrainer::readText(const char *fp,
 
 using ssp = pair<size_t, uint64_t>;
 
-pair<size_t, uint64_t>
-BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
-                            char *f, char *fo) {
+pair<size_t, uint64_t> BPETrainer::output_or_count(
+    unordered_map<string, string> &bpe, size_t size, char *f, char *fo) {
   string cur_word;
   size_t charOut = 0;
   uint64_t total = 0;
@@ -76,8 +77,7 @@ BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
     auto &cur_char = f[i];
     if (cur_char == ' ' || cur_char == '\n') {
       if (cur_word.size() == 0) {
-        if (fo != nullptr)
-          fo[charOut] = cur_char;
+        if (fo != nullptr) fo[charOut] = cur_char;
         charOut++;
         continue;
       }
@@ -85,12 +85,10 @@ BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
       auto it = bpe.find(cur_word);
       assert(it != bpe.end());
       for (auto x : it->second) {
-        if (fo != nullptr)
-          fo[charOut] = x;
+        if (fo != nullptr) fo[charOut] = x;
         charOut++;
       }
-      if (fo != nullptr)
-        fo[charOut] = cur_char;
+      if (fo != nullptr) fo[charOut] = cur_char;
       charOut++;
 
       total++;
@@ -104,7 +102,6 @@ BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
 
 void BPETrainer::outputText(const char *fpo, const char *fp,
                             unordered_map<string, string> &bpe) {
-
   int fd = safeOpen(fp, O_RDONLY);
   auto fdOut = safeOpen(fpo, O_RDWR | O_CREAT | O_TRUNC, 0666);
 
@@ -142,7 +139,6 @@ void BPETrainer::tokenize(const unordered_map<string, uint32_t> &word_count,
                           vector<string> &int_to_token,
                           vector<list<uint32_t>> &words,
                           vector<int32_t> &counts) {
-
   for (auto &x : word_count) {
     auto &word = x.first;
 
@@ -153,7 +149,7 @@ void BPETrainer::tokenize(const unordered_map<string, uint32_t> &word_count,
     int pos = 0, realLength = 0;
     int lastStart = 0;
     while (word[pos]) {
-      bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
+      bool newChar = (word[pos] & 0xc0) != 0x80;  // not a continuation byte
       realLength += newChar;
       // new token
       if (newChar && pos > 0) {
@@ -178,7 +174,6 @@ void BPETrainer::tokenize(const unordered_map<string, uint32_t> &word_count,
 
 void BPETrainer::tokenize_str(const unordered_map<string, uint32_t> &word_count,
                               unordered_map<string, vector<string>> &words) {
-
   for (auto &x : word_count) {
     auto &word = x.first;
     words[word] = vector<string>();
@@ -186,7 +181,7 @@ void BPETrainer::tokenize_str(const unordered_map<string, uint32_t> &word_count,
     int pos = 0, realLength = 0;
     int lastStart = 0;
     while (word[pos]) {
-      bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
+      bool newChar = (word[pos] & 0xc0) != 0x80;  // not a continuation byte
       realLength += newChar;
       // new token
       if (newChar && pos > 0) {
@@ -323,8 +318,7 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
           where_to_update[pair] = unordered_set<uint32_t>();
         }
       }
-      if (v > 0)
-        where_to_update[pair].insert(wi);
+      if (v > 0) where_to_update[pair].insert(wi);
     };
 
     for (auto wi : where_to_update[max_p]) {
@@ -340,7 +334,7 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
         if (second) {
           // found the pair
           if (cur_pair == max_p) {
-            it--; // points to first element of pair
+            it--;  // points to first element of pair
             // if there is a token before us
             if (it != cur_word.begin()) {
               it--;
@@ -349,10 +343,10 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
               it++;
             }
 
-            it = cur_word.insert(it, new_token_id); // it points to new token
-            it++;                    // it points to first element of pair
-            it = cur_word.erase(it); // it points to second element of pair
-            it = cur_word.erase(it); // it points to next value
+            it = cur_word.insert(it, new_token_id);  // it points to new token
+            it++;                     // it points to first element of pair
+            it = cur_word.erase(it);  // it points to second element of pair
+            it = cur_word.erase(it);  // it points to next value
 
             // if there is a token after the one we inserted
             if (it != cur_word.end()) {
@@ -380,15 +374,14 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
 void BPETrainer::split(vector<string> &splits, const string &text, char sep) {
   size_t start = 0, end = 0;
   while ((end = text.find(sep, start)) != string::npos) {
-    if (end != start)
-      splits.push_back(text.substr(start, end - start));
+    if (end != start) splits.push_back(text.substr(start, end - start));
     start = end + 1;
   }
-  if (end != start && start < text.size())
-    splits.push_back(text.substr(start));
+  if (end != start && start < text.size()) splits.push_back(text.substr(start));
 }
 
-void BPETrainer::readVocab(const char *fp, unordered_map<string, uint32_t> voc) {
+void BPETrainer::readVocab(const char *fp,
+                           unordered_map<string, uint32_t> &voc) {
   ifstream file(fp);
   if (!file) {
     fprintf(stderr, "Cannot open vocabulary file %s\n", fp);
@@ -495,7 +488,7 @@ string BPETrainer::process_bpe(vector<string> &subwords) {
   while (subwords.size() > 1) {
     // find the best pair
     int bestPairId = -1;
-    auto bestPair = codes.end(); // TODO ugly hack that works
+    auto bestPair = codes.end();  // TODO ugly hack that works
     for (size_t i = 0; i < subwords.size() - 1; i++) {
       auto pair = make_pair(subwords[i], subwords[i + 1]);
       auto it = codes.find(pair);
@@ -541,7 +534,7 @@ string BPETrainer::process_bpe(vector<string> &subwords) {
   }
   return result.substr(
       0,
-      result.size() - jEndWordLength - jTokenDelimLength - 1 // "</w>@@ "
+      result.size() - jEndWordLength - jTokenDelimLength - 1  // "</w>@@ "
   );
 }
 
@@ -605,7 +598,7 @@ string BPETrainer::apply(string &sentence) {
     int pos = 0, realLength = 0;
     int lastStart = 0;
     while (word[pos]) {
-      bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
+      bool newChar = (word[pos] & 0xc0) != 0x80;  // not a continuation byte
       realLength += newChar;
       if (newChar && pos > 0) {
         auto new_token = word.substr(lastStart, pos - lastStart);
@@ -617,8 +610,7 @@ string BPETrainer::apply(string &sentence) {
     auto bpe = word.substr(lastStart, string::npos) + jEndWord;
     word_bpes.push_back(bpe);
     cur += process_bpe(word_bpes);
-    if (i < words.size() - 1)
-      cur += " ";
+    if (i < words.size() - 1) cur += " ";
   }
   return cur;
 }
@@ -639,7 +631,7 @@ vector<string> BPETrainer::apply(vector<string> &sentences) {
       int pos = 0, realLength = 0;
       int lastStart = 0;
       while (word[pos]) {
-        bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
+        bool newChar = (word[pos] & 0xc0) != 0x80;  // not a continuation byte
         realLength += newChar;
         if (newChar && pos > 0) {
           auto new_token = word.substr(lastStart, pos - lastStart);
@@ -651,25 +643,19 @@ vector<string> BPETrainer::apply(vector<string> &sentences) {
       auto bpe = word.substr(lastStart, string::npos) + jEndWord;
       word_bpes.push_back(bpe);
       cur += process_bpe(word_bpes);
-      if (i < words.size() - 1)
-        cur += " ";
+      if (i < words.size() - 1) cur += " ";
     }
   }
   return res;
 }
 
-/*
-BPEInference::BPEInference(
-  unordered_map<string, uint32_t> vocab,
-  unordered_map<tps, uint32_t, pair_hash> codes,
-  unordered_map<string, tps> reversed_codes) : vocab(vocab), codes(codes), reversed_codes(reversed_codes) {};
-*/
-
 BPEInference::BPEInference(const char *codesPath, const char *vocabPath,
                            const char *jEndWord, const size_t jEndWordLength,
                            const char *jTokenDelim,
                            const size_t jTokenDelimLength,
-                           const size_t jThreads) {
+                           const size_t jThreads)
+    : BPETrainer(jEndWord, jEndWordLength, jTokenDelim, jTokenDelimLength,
+                 jThreads) {
   unordered_map<string, uint32_t> voc;
   if (strcmp(vocabPath, "") != 0) {
     readVocab(vocabPath, voc);
@@ -683,4 +669,4 @@ BPEInference::BPEInference(const char *codesPath, const char *vocabPath,
   reversed_codes = rco;
 };
 
-} // namespace flexBPE
+}  // namespace flexBPE
