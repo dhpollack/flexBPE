@@ -5,9 +5,11 @@ using namespace std;
 
 const size_t kMaxPairs = 1000 * 1000 * 1000;
 
-BPETrainer::BPETrainer(const size_t jThreads, const char *jEndWord, const size_t jEndWordLength, const char *jTokenDelim, const size_t jTokenDelimLength) {
-  // add more initialization code here
-}
+BPETrainer::BPETrainer(const char *jEndWord, const size_t jEndWordLength,
+                       const char *jTokenDelim, const size_t jTokenDelimLength,
+                       const size_t jThreads)
+    : jThreads(jThreads), jEndWord(jEndWord), jEndWordLength(jEndWordLength),
+      jTokenDelim(jTokenDelim), jTokenDelimLength(jTokenDelimLength) {}
 
 int BPETrainer::safeOpen(const char *file_path, int flags, mode_t mode = 0) {
   int fd = open(file_path, flags, mode);
@@ -18,7 +20,8 @@ int BPETrainer::safeOpen(const char *file_path, int flags, mode_t mode = 0) {
   return fd;
 }
 
-void BPETrainer::readText(const char *fp, unordered_map<string, uint32_t> &word_count) {
+void BPETrainer::readText(const char *fp,
+                          unordered_map<string, uint32_t> &word_count) {
   string cur_word;
   uint64_t total = 0;
   auto deal_with_char = [&](char cur_char) {
@@ -63,8 +66,9 @@ void BPETrainer::readText(const char *fp, unordered_map<string, uint32_t> &word_
 
 using ssp = pair<size_t, uint64_t>;
 
-pair<size_t, uint64_t> BPETrainer::output_or_count(unordered_map<string, string> &bpe,
-                                                        size_t size, char *f, char *fo) {
+pair<size_t, uint64_t>
+BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
+                            char *f, char *fo) {
   string cur_word;
   size_t charOut = 0;
   uint64_t total = 0;
@@ -99,7 +103,7 @@ pair<size_t, uint64_t> BPETrainer::output_or_count(unordered_map<string, string>
 }
 
 void BPETrainer::outputText(const char *fpo, const char *fp,
-                unordered_map<string, string> &bpe) {
+                            unordered_map<string, string> &bpe) {
 
   int fd = safeOpen(fp, O_RDONLY);
   auto fdOut = safeOpen(fpo, O_RDWR | O_CREAT | O_TRUNC, 0666);
@@ -134,9 +138,10 @@ void BPETrainer::outputText(const char *fpo, const char *fp,
 }
 
 void BPETrainer::tokenize(const unordered_map<string, uint32_t> &word_count,
-              unordered_map<string, uint32_t> &token_to_int,
-              vector<string> &int_to_token, vector<list<uint32_t>> &words,
-              vector<int32_t> &counts) {
+                          unordered_map<string, uint32_t> &token_to_int,
+                          vector<string> &int_to_token,
+                          vector<list<uint32_t>> &words,
+                          vector<int32_t> &counts) {
 
   for (auto &x : word_count) {
     auto &word = x.first;
@@ -172,7 +177,7 @@ void BPETrainer::tokenize(const unordered_map<string, uint32_t> &word_count,
 }
 
 void BPETrainer::tokenize_str(const unordered_map<string, uint32_t> &word_count,
-                  unordered_map<string, vector<string>> &words) {
+                              unordered_map<string, vector<string>> &words) {
 
   for (auto &x : word_count) {
     auto &word = x.first;
@@ -228,8 +233,8 @@ void BPETrainer::count_in_word(
   }
 }
 
-void BPETrainer::find_maxp(vector<pair<int32_t, tp>> &contiguous_counts, tp &maxp,
-               int32_t &max_c) {
+void BPETrainer::find_maxp(vector<pair<int32_t, tp>> &contiguous_counts,
+                           tp &maxp, int32_t &max_c) {
   max_c = 0;
   for (auto &x : contiguous_counts) {
     if (x.first > max_c) {
@@ -264,7 +269,7 @@ void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2) {
 }
 
 void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
-              const char *inputFile2) {
+                          const char *inputFile2) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
   readText(inputFile1, word_count);
@@ -383,7 +388,7 @@ void BPETrainer::split(vector<string> &splits, const string &text, char sep) {
     splits.push_back(text.substr(start));
 }
 
-void BPETrainer::readVocab(const char *fp, unordered_map<string, uint32_t> &vocab) {
+void BPETrainer::readVocab(const char *fp, unordered_map<string, uint32_t> voc) {
   ifstream file(fp);
   if (!file) {
     fprintf(stderr, "Cannot open vocabulary file %s\n", fp);
@@ -396,17 +401,18 @@ void BPETrainer::readVocab(const char *fp, unordered_map<string, uint32_t> &voca
     vector<string> splits;
     split(splits, line, ' ');
     assert(splits.size() == 2);
-    assert(vocab.find(splits[0]) == vocab.end());
+    assert(voc.find(splits[0]) == voc.end());
     int count = stoi(splits[1]);
-    vocab[splits[0]] = count;
+    voc[splits[0]] = count;
     total += count;
   }
   fprintf(stderr, "Read %lu words (%lu unique) from vocabulary file.\n", total,
-          vocab.size());
+          voc.size());
 }
 
-void BPETrainer::readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
-               unordered_map<string, tps> &reversed_codes) {
+void BPETrainer::readCodes(const char *fp,
+                           unordered_map<tps, uint32_t, pair_hash> &co,
+                           unordered_map<string, tps> &rco) {
   ifstream file(fp);
   if (!file) {
     fprintf(stderr, "Cannot open codes file %s\n", fp);
@@ -420,17 +426,16 @@ void BPETrainer::readCodes(const char *fp, unordered_map<tps, uint32_t, pair_has
     assert(splits.size() == 3);
     auto pair = make_pair(splits[0], splits[1]);
     string concat = splits[0] + splits[1];
-    assert(codes.find(pair) == codes.end());
-    assert(reversed_codes.find(concat) == reversed_codes.end());
-    codes[pair] = codes.size();
-    reversed_codes[concat] = pair;
+    assert(co.find(pair) == co.end());
+    assert(rco.find(concat) == rco.end());
+    co[pair] = co.size();
+    rco[concat] = pair;
   }
-  fprintf(stderr, "Read %lu codes from the codes file.\n", codes.size());
+  fprintf(stderr, "Read %lu codes from the codes file.\n", co.size());
 }
 
 void BPETrainer::decompose(const string s, vector<string> &newSubwords,
-               const unordered_map<string, tps> &reversed_codes,
-               const unordered_map<string, uint32_t> &vocab, bool isFinal) {
+                           bool isFinal) {
   auto it = reversed_codes.find(s);
   if (it == reversed_codes.end()) {
     // TODO this whole block below is just some sanity check
@@ -449,7 +454,7 @@ void BPETrainer::decompose(const string s, vector<string> &newSubwords,
   assert(it != reversed_codes.end());
   string token1 = it->second.first;
   if (vocab.find(token1 + jTokenDelim) == vocab.end()) {
-    decompose(token1, newSubwords, reversed_codes, vocab, false);
+    decompose(token1, newSubwords, false);
   } else {
     newSubwords.push_back(token1);
   }
@@ -459,15 +464,14 @@ void BPETrainer::decompose(const string s, vector<string> &newSubwords,
     query = token2.substr(0, token2.size() - jEndWordLength);
   }
   if (vocab.find(query) == vocab.end()) {
-    decompose(token2, newSubwords, reversed_codes, vocab, isFinal);
+    decompose(token2, newSubwords, isFinal);
   } else {
     newSubwords.push_back(token2);
   }
 }
 
-void BPETrainer::limitVocab(const vector<string> &subwords, vector<string> &newSubwords,
-                const unordered_map<string, tps> &reversed_codes,
-                const unordered_map<string, uint32_t> &vocab) {
+void BPETrainer::limitVocab(const vector<string> &subwords,
+                            vector<string> &newSubwords) {
   string query;
   for (size_t i = 0; i < subwords.size(); i++) {
     bool isFinal = i == subwords.size() - 1;
@@ -478,17 +482,14 @@ void BPETrainer::limitVocab(const vector<string> &subwords, vector<string> &newS
       query = subword + jTokenDelim;
     }
     if (vocab.find(query) == vocab.end()) {
-      decompose(subword, newSubwords, reversed_codes, vocab, isFinal);
+      decompose(subword, newSubwords, isFinal);
     } else {
       newSubwords.push_back(subword);
     }
   }
 }
 
-string BPETrainer::process_bpe(vector<string> &subwords,
-                   unordered_map<tps, uint32_t, pair_hash> &codes,
-                   unordered_map<string, tps> &reversed_codes,
-                   unordered_map<string, uint32_t> &vocab) {
+string BPETrainer::process_bpe(vector<string> &subwords) {
   // merge subWords as much as possible
   vector<string> newSubwords;
   while (subwords.size() > 1) {
@@ -530,7 +531,7 @@ string BPETrainer::process_bpe(vector<string> &subwords,
   // check that we are only using words in the dictionary
   if (vocab.size() > 0) {
     vector<string> newSubwords;
-    limitVocab(subwords, newSubwords, reversed_codes, vocab);
+    limitVocab(subwords, newSubwords);
     subwords = newSubwords;
   }
   // concat subWords
@@ -544,19 +545,7 @@ string BPETrainer::process_bpe(vector<string> &subwords,
   );
 }
 
-void BPETrainer::applybpe(const char *outputFile, const char *inputFile,
-              const char *codesPath, const char *vocabPath) {
-  // read vocabulary (to which we want to limit the output file)
-  unordered_map<string, uint32_t> vocab;
-  if (strcmp(vocabPath, "") != 0) {
-    readVocab(vocabPath, vocab);
-  }
-
-  // read codes
-  unordered_map<tps, uint32_t, pair_hash> codes;
-  unordered_map<string, tps> reversed_codes;
-  readCodes(codesPath, codes, reversed_codes);
-
+void BPETrainer::applybpe(const char *outputFile, const char *inputFile) {
   // read input file words
   unordered_map<string, uint32_t> word_count;
   readText(inputFile, word_count);
@@ -578,8 +567,7 @@ void BPETrainer::applybpe(const char *outputFile, const char *inputFile,
         [&](size_t this_thread) {
           for (size_t w = this_thread; w < bpeTokVec.size(); w += jThreads) {
             auto &x = bpeTokVec[w];
-            bpe[this_thread][x.first] =
-                process_bpe(x.second, codes, reversed_codes, vocab);
+            bpe[this_thread][x.first] = process_bpe(x.second);
           }
         },
         i);
@@ -596,8 +584,7 @@ void BPETrainer::applybpe(const char *outputFile, const char *inputFile,
   outputText(outputFile, inputFile, final_bpe);
 }
 
-/*
-void BPETrainer::applybpe_stream(const char *codesPath, const char *vocabPath) {
+void BPETrainer::applybpe_stream() {
   std::string line;
   while (std::getline(std::cin, line)) {
     vector<string> tmp;
@@ -607,11 +594,41 @@ void BPETrainer::applybpe_stream(const char *codesPath, const char *vocabPath) {
     }
   }
 }
-*/
+
+string BPETrainer::apply(string &sentence) {
+  string cur = "";
+  vector<string> words;
+  split(words, sentence, ' ');
+  for (size_t i = 0; i < words.size(); i++) {
+    auto word = words[i];
+    vector<string> word_bpes;
+    int pos = 0, realLength = 0;
+    int lastStart = 0;
+    while (word[pos]) {
+      bool newChar = (word[pos] & 0xc0) != 0x80; // not a continuation byte
+      realLength += newChar;
+      if (newChar && pos > 0) {
+        auto new_token = word.substr(lastStart, pos - lastStart);
+        word_bpes.push_back(new_token);
+        lastStart = pos;
+      }
+      pos++;
+    }
+    auto bpe = word.substr(lastStart, string::npos) + jEndWord;
+    word_bpes.push_back(bpe);
+    cur += process_bpe(word_bpes);
+    if (i < words.size() - 1)
+      cur += " ";
+  }
+  return cur;
+}
 
 vector<string> BPETrainer::apply(vector<string> &sentences) {
   vector<string> res;
   for (auto &s : sentences) {
+    /*
+    res.emplace_back(apply(s));
+    */
     res.emplace_back("");
     string &cur = res.back();
     vector<string> words;
@@ -633,7 +650,7 @@ vector<string> BPETrainer::apply(vector<string> &sentences) {
       }
       auto bpe = word.substr(lastStart, string::npos) + jEndWord;
       word_bpes.push_back(bpe);
-      cur += process_bpe(word_bpes, codes, reversed_codes, vocab);
+      cur += process_bpe(word_bpes);
       if (i < words.size() - 1)
         cur += " ";
     }
@@ -641,6 +658,29 @@ vector<string> BPETrainer::apply(vector<string> &sentences) {
   return res;
 }
 
+/*
+BPEInference::BPEInference(
+  unordered_map<string, uint32_t> vocab,
+  unordered_map<tps, uint32_t, pair_hash> codes,
+  unordered_map<string, tps> reversed_codes) : vocab(vocab), codes(codes), reversed_codes(reversed_codes) {};
+*/
 
+BPEInference::BPEInference(const char *codesPath, const char *vocabPath,
+                           const char *jEndWord, const size_t jEndWordLength,
+                           const char *jTokenDelim,
+                           const size_t jTokenDelimLength,
+                           const size_t jThreads) {
+  unordered_map<string, uint32_t> voc;
+  if (strcmp(vocabPath, "") != 0) {
+    readVocab(vocabPath, voc);
+    vocab = voc;
+  }
+
+  unordered_map<tps, uint32_t, pair_hash> co;
+  unordered_map<string, tps> rco;
+  readCodes(codesPath, co, rco);
+  codes = co;
+  reversed_codes = rco;
+};
 
 } // namespace flexBPE

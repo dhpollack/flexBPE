@@ -22,20 +22,23 @@ int main(int argc, char **argv) {
     printUsage();
     exit(EXIT_FAILURE);
   }
-  BPETrainer trainer = BPETrainer();
   string command = argv[1];
   if (command == "getvocab") {
     assert(argc == 3 || argc == 4);
+    BPETrainer trainer = BPETrainer();
     trainer.getvocab(argv[2], argc == 4 ? argv[3] : "");
   } else if (command == "learnbpe") {
     assert(argc == 4 || argc == 5);
+    BPETrainer trainer = BPETrainer();
     trainer.learnbpe(stoi(argv[2]), argv[3], argc == 5 ? argv[4] : "");
   } else if (command == "applybpe") {
     assert(argc == 5 || argc == 6);
-    trainer.applybpe(argv[2], argv[3], argv[4], argc == 6 ? argv[5] : "");
+    BPEInference inference = BPEInference(argv[4], argc == 6 ? argv[5] : "");
+    inference.applybpe(argv[2], argv[3]);
   } else if (command == "applybpe_stream") {
-    //assert(argc == 3 || argc == 4);
-    //trainer.applybpe_stream(argv[2], argc == 4 ? argv[3] : "");
+    assert(argc == 3 || argc == 4);
+    BPEInference inference = BPEInference(argv[2], argc == 4 ? argv[3] : "");
+    inference.applybpe_stream();
   } else {
     printUsage();
     exit(EXIT_FAILURE);

@@ -38,47 +38,46 @@ using tps = pair<string, string>;
 using pc = unordered_map<tp, pair<int32_t, tp> *, pair_hash>;
 
 class BPETrainer {
-/*
- * const size_t kThreads = max(1, min(10, int(thread::hardware_concurrency())));
- * const char *kEndWord = "</w>";
- * const size_t kEndWordLength = 4;
- * const char *kTokenDelim = "@@";
- * const size_t kTokenDelimLength = 2;
- *
-*/
 public:
-  explicit BPETrainer(const size_t jThreads = max(1, min(10, int(thread::hardware_concurrency()))), 
-		      const char *jEndWord = "</w>", 
-		      const size_t jEndWordLength = 4, 
-		      const char *jTokenDelim = "@@", 
-		      const size_t jTokenDelimLength = 2);
+  explicit BPETrainer(const char *jEndWord = "</w>",
+                      const size_t jEndWordLength = 4,
+                      const char *jTokenDelim = "@@",
+                      const size_t jTokenDelimLength = 2,
+                      const size_t jThreads =
+                          max(1, min(10, int(thread::hardware_concurrency()))));
 
   void learnbpe(const uint32_t kNPairs, const char *inputFile1,
                 const char *inputFile2);
 
   void getvocab(const char *inputFile1, const char *inputFile2);
-  
-  void applybpe(const char *outputFile, const char *inputFile,
-                const char *codesPath, const char *vocabPath);
-  
-  void applybpe_stream(const char *codesPath, const char *vocabPath);
 
-private:
-  // previous global variables
-  size_t jThreads;
-  char *jEndWord;
-  size_t jEndWordLength;
-  char *jTokenDelim;
-  size_t jTokenDelimLength;
+  void applybpe(const char *outputFile, const char *inputFile);
+
+  void applybpe_stream();
+
+  void readVocab(const char *fp, unordered_map<string, uint32_t> vocab);
+
+  void readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
+                 unordered_map<string, tps> &reversed_codes);
+
   // Previously serialized to a file
   unordered_map<string, uint32_t> vocab;
   unordered_map<tps, uint32_t, pair_hash> codes;
   unordered_map<string, tps> reversed_codes;
+
+private:
+  // previous global variables
+  const char *jEndWord;
+  const size_t jEndWordLength;
+  const char *jTokenDelim;
+  const size_t jTokenDelimLength;
+  const size_t jThreads;
   // private functions
   int safeOpen(const char *file_path, int flags, mode_t mode);
   void readText(const char *fp, unordered_map<string, uint32_t> &word_count);
-  std::pair<size_t, uint64_t> output_or_count(unordered_map<string, string> &bpe,
-                                              size_t size, char *f, char *fo);
+  std::pair<size_t, uint64_t>
+  output_or_count(unordered_map<string, string> &bpe, size_t size, char *f,
+                  char *fo);
   void outputText(const char *fpo, const char *fp,
                   unordered_map<string, string> &bpe);
   void tokenize(const unordered_map<string, uint32_t> &word_count,
@@ -87,27 +86,28 @@ private:
                 vector<int32_t> &counts);
   void tokenize_str(const unordered_map<string, uint32_t> &word_count,
                     unordered_map<string, vector<string>> &words);
-  void count_in_word(
-      list<uint32_t> &word, uint32_t wi, uint32_t count, pc &pair_counts,
-      vector<pair<int32_t, tp>> &contiguous_counts,
-      unordered_map<tp, unordered_set<uint32_t>, pair_hash> &where);
+  void
+  count_in_word(list<uint32_t> &word, uint32_t wi, uint32_t count,
+                pc &pair_counts, vector<pair<int32_t, tp>> &contiguous_counts,
+                unordered_map<tp, unordered_set<uint32_t>, pair_hash> &where);
   void find_maxp(vector<pair<int32_t, tp>> &contiguous_counts, tp &maxp,
                  int32_t &max_c);
   void split(vector<string> &splits, const string &text, char sep);
-  void readVocab(const char *fp, unordered_map<string, uint32_t> &vocab);
-  void readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
-                 unordered_map<string, tps> &reversed_codes);
-  void decompose(const string s, vector<string> &newSubwords,
-                 const unordered_map<string, tps> &reversed_codes,
-                 const unordered_map<string, uint32_t> &vocab, bool isFinal);
-  void limitVocab(const vector<string> &subwords, vector<string> &newSubwords,
-                  const unordered_map<string, tps> &reversed_codes,
-                  const unordered_map<string, uint32_t> &vocab);
-  string process_bpe(vector<string> &subwords,
-                     unordered_map<tps, uint32_t, pair_hash> &codes,
-                     unordered_map<string, tps> &reversed_codes,
-                     unordered_map<string, uint32_t> &vocab);
+  void decompose(const string s, vector<string> &newSubwords, bool isFinal);
+  void limitVocab(const vector<string> &subwords, vector<string> &newSubwords);
+  string process_bpe(vector<string> &subwords);
+  string apply(string &sentence);
   vector<string> apply(vector<string> &sentences);
 };
 
-} // end namespace flexbpe
+class BPEInference : public BPETrainer {
+public:
+  explicit BPEInference(
+      const char *codesPath, const char *vocabPath,
+      const char *jEndWord = "</w>", const size_t jEndWordLength = 4,
+      const char *jTokenDelim = "@@", const size_t jTokenDelimLength = 2,
+      const size_t jThreads = max(1, min(10,
+                                         int(thread::hardware_concurrency()))));
+};
+
+} // namespace flexBPE
