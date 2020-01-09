@@ -243,7 +243,7 @@ void BPETrainer::find_maxp(vector<pair<int32_t, tp>> &contiguous_counts,
   }
 }
 
-void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2) {
+vector<string> BPETrainer::getvocab_vec(const char *inputFile1, const char *inputFile2) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
   readText(inputFile1, word_count);
@@ -261,11 +261,30 @@ void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2) {
   assert(word_count.size() == sorted_vocab.size());
 
   // print sorted vocab
-  for (auto element : sorted_vocab)
-    cout << element.first << " " << element.second << endl;
+  vector<string> vocab_vec;
+  for (auto element : sorted_vocab) {
+    string s = element.first;
+    s += " ";
+    s += element.second;
+    vocab_vec.push_back(s);
+  }
+  return vocab_vec;
+}
+
+void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2) {
+  vector<string> vocab_vec = getvocab_vec(inputFile1, inputFile2);
+  for (auto s : vocab_vec) 
+    cout << s << endl;
 }
 
 void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
+                          const char *inputFile2) {
+  vector<string> codes_vec = learnbpe_vec(kNPairs, inputFile1, inputFile2);
+  for (auto s : codes_vec)
+    cout << s << endl;
+}
+
+vector<string> BPETrainer::learnbpe_vec(const uint32_t kNPairs, const char *inputFile1,
                           const char *inputFile2) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
@@ -296,12 +315,19 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
     count_in_word(words[wi], wi, counts[wi], pair_counts, contiguous_counts,
                   where_to_update);
   }
+  vector<string> codes_vec;
   find_maxp(contiguous_counts, max_p, max_c);
   for (size_t i = 0; i < kNPairs; i++) {
     // create new token for pair. replace
     auto new_token = int_to_token[max_p.first] + int_to_token[max_p.second];
-    cout << int_to_token[max_p.first] << " " << int_to_token[max_p.second]
-         << " " << max_c << endl;
+    //cout << int_to_token[max_p.first] << " " << int_to_token[max_p.second]
+    //     << " " << max_c << endl;
+    string s = int_to_token[max_p.first];
+    s += " ";
+    s += int_to_token[max_p.second];
+    s += " ";
+    s += max_c;
+    codes_vec.push_back(s);
 
     uint32_t new_token_id = int_to_token.size();
     int_to_token.push_back(new_token);
@@ -372,6 +398,7 @@ void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
     }
     find_maxp(contiguous_counts, max_p, max_c);
   }
+  return codes_vec;
 }
 
 void BPETrainer::split(vector<string> &splits, const string &text, char sep) {

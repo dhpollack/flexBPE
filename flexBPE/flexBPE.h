@@ -47,11 +47,15 @@ public:
                       const size_t jThreads =
                           max(1, min(10, int(thread::hardware_concurrency()))));
 
+  vector<string> learnbpe_vec(const uint32_t kNPairs, const char *inputFile1,
+                const char *inputFile2);
   void learnbpe(const uint32_t kNPairs, const char *inputFile1,
                 const char *inputFile2);
 
+  vector<string> getvocab_vec(const char *inputFile1, const char *inputFile2);
   void getvocab(const char *inputFile1, const char *inputFile2);
 
+  vector<string> applybpe(const char *inputFile);
   void applybpe(const char *outputFile, const char *inputFile);
 
   void applybpe_stream();

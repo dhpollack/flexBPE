@@ -6,8 +6,19 @@ project(flexbpe
 	VERSION 0.0.1 
 	DESCRIPTION "Byte Pair Encoding library based on fastBPE, but a bit bendier.")
 
+# tests
+option(BUILD_TEST "Build c++ tests" OFF)
+if (BUILD_TEST)
+  enable_testing()
+  find_package(GTest)
+  include(GoogleTest)
+  add_subdirectory(test)
+endif()
+
 # add subdirectory
 add_subdirectory(flexBPE)
+
+
 
 # create package file to add to other projects (generated from template)
 configure_file(flexbpe.pc.in flexbpe.pc @ONLY)
