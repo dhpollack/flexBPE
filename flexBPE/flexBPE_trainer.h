@@ -1,20 +1,21 @@
 #pragma once
-#include <algorithm>
 #include <assert.h>
-#include <cstring>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h> // ftruncate
+
+#include <algorithm>
+#include <cstring>
 #include <fstream>
 #include <functional>
 #include <iostream>
 #include <list>
 #include <set>
-#include <stdio.h>
 #include <string>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <thread>
-#include <unistd.h> // ftruncate
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
