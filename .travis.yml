@@ -10,6 +10,13 @@ addons:
 before_install:
     - sudo apt-get update
     - sudo apt-get -y install cmake build-essential pkg-config libgoogle-perftools-dev libboost-all-dev wget unzip libgtest-dev
+    - mkdir build_gtest
+    - cd build_gtest
+    - cmake /usr/src/gtest
+    - make
+    - sudo make install
+    - cd ..
+    - rm -Rf build_gtest
 
 before_script:
     - mkdir build
