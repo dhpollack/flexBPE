@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
   } else if (command == "learnbpe") {
     assert(argc == 4 || argc == 5);
     BPETrainer trainer = BPETrainer();
-    trainer.learnbpe(stoi(argv[2]), argv[3], argc == 5 ? argv[4] : "");
+    trainer.learncodes(stoi(argv[2]), argv[3], argc == 5 ? argv[4] : "");
   } else if (command == "applybpe") {
     assert(argc == 5 || argc == 6);
     BPEInference inference = BPEInference(argv[4], argc == 6 ? argv[5] : "");

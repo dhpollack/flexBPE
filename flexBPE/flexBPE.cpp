@@ -51,7 +51,8 @@ void BPETrainer::readText(const char *fp,
 
     struct stat s;
     fstat(fd, &s);
-    fprintf(stderr, "Loading vocabulary from %s ...\n", fp);
+    // TODO: make this output to a log
+    // fprintf(stderr, "Loading vocabulary from %s ...\n", fp);
 
     size_t size = s.st_size;
     char *f = (char *)mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -60,6 +61,7 @@ void BPETrainer::readText(const char *fp,
       deal_with_char(f[i]);
     }
   }
+  // also send to a log file
   fprintf(stderr, "Read %lu words (%lu unique) from text file.\n", total,
           word_count.size());
 }
@@ -243,7 +245,8 @@ void BPETrainer::find_maxp(vector<pair<int32_t, tp>> &contiguous_counts,
   }
 }
 
-vector<string> BPETrainer::getvocab_vec(const char *inputFile1, const char *inputFile2) {
+void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2,
+                          const bool output_vocab) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
   readText(inputFile1, word_count);
@@ -260,32 +263,21 @@ vector<string> BPETrainer::getvocab_vec(const char *inputFile1, const char *inpu
       word_count.begin(), word_count.end(), compFunctor);
   assert(word_count.size() == sorted_vocab.size());
 
-  // print sorted vocab
-  vector<string> vocab_vec;
+  // added sorted vocab
   for (auto element : sorted_vocab) {
-    string s = element.first;
-    s += " ";
-    s += element.second;
-    vocab_vec.push_back(s);
+    vocab[element.first] = element.second;
+    if (output_vocab)
+      cout << element.first << " " << element.second << endl;
   }
-  return vocab_vec;
 }
 
-void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2) {
-  vector<string> vocab_vec = getvocab_vec(inputFile1, inputFile2);
-  for (auto s : vocab_vec) 
-    cout << s << endl;
+void BPETrainer::printvocab() {
+  for (auto element : vocab)
+    cout << element.first << " " << element.second << endl;
 }
 
-void BPETrainer::learnbpe(const uint32_t kNPairs, const char *inputFile1,
-                          const char *inputFile2) {
-  vector<string> codes_vec = learnbpe_vec(kNPairs, inputFile1, inputFile2);
-  for (auto s : codes_vec)
-    cout << s << endl;
-}
-
-vector<string> BPETrainer::learnbpe_vec(const uint32_t kNPairs, const char *inputFile1,
-                          const char *inputFile2) {
+void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
+                            const char *inputFile2, const bool output_codes) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
   readText(inputFile1, word_count);
@@ -318,16 +310,22 @@ vector<string> BPETrainer::learnbpe_vec(const uint32_t kNPairs, const char *inpu
   vector<string> codes_vec;
   find_maxp(contiguous_counts, max_p, max_c);
   for (size_t i = 0; i < kNPairs; i++) {
+    // stop if no more merges can be made
+    if (max_c == 0) {
+      cout << "Stopping because no more merges can be made.  num codes found ("
+           << codes.size() << ") < num codes desired (" << kNPairs << ")"
+           << endl;
+      break;
+    }
     // create new token for pair. replace
+    string s1 = int_to_token[max_p.first];
+    string s2 = int_to_token[max_p.second];
+    auto pair = make_pair(s1, s2);
+    string concat = s1 + s2;
+    codes[pair] = codes.size();
+    reversed_codes[concat] = pair;
     auto new_token = int_to_token[max_p.first] + int_to_token[max_p.second];
-    //cout << int_to_token[max_p.first] << " " << int_to_token[max_p.second]
-    //     << " " << max_c << endl;
-    string s = int_to_token[max_p.first];
-    s += " ";
-    s += int_to_token[max_p.second];
-    s += " ";
-    s += max_c;
-    codes_vec.push_back(s);
+    cout << s1 << " " << s2 << " " << max_c << endl;
 
     uint32_t new_token_id = int_to_token.size();
     int_to_token.push_back(new_token);
@@ -398,7 +396,13 @@ vector<string> BPETrainer::learnbpe_vec(const uint32_t kNPairs, const char *inpu
     }
     find_maxp(contiguous_counts, max_p, max_c);
   }
-  return codes_vec;
+}
+
+void BPETrainer::printcodes() {
+  // TODO: sort unordered_map before printing
+  for (auto element : codes)
+    cout << element.first.first << " " << element.first.second << " "
+         << element.second << endl;
 }
 
 void BPETrainer::split(vector<string> &splits, const string &text, char sep) {

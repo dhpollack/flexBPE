@@ -47,15 +47,14 @@ public:
                       const size_t jThreads =
                           max(1, min(10, int(thread::hardware_concurrency()))));
 
-  vector<string> learnbpe_vec(const uint32_t kNPairs, const char *inputFile1,
-                const char *inputFile2);
-  void learnbpe(const uint32_t kNPairs, const char *inputFile1,
-                const char *inputFile2);
+  void learncodes(const uint32_t kNPairs, const char *inputFile1,
+                  const char *inputFile2, const bool = false);
+  void printcodes();
 
-  vector<string> getvocab_vec(const char *inputFile1, const char *inputFile2);
-  void getvocab(const char *inputFile1, const char *inputFile2);
+  void getvocab(const char *inputFile1, const char *inputFile2,
+                const bool = false);
+  void printvocab();
 
-  vector<string> applybpe(const char *inputFile);
   void applybpe(const char *outputFile, const char *inputFile);
 
   void applybpe_stream();
@@ -64,6 +63,10 @@ public:
 
   void readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
                  unordered_map<string, tps> &reversed_codes);
+
+  string apply(string &sentence);
+
+  vector<string> apply(vector<string> &sentences);
 
   // Previously serialized to a file
   unordered_map<string, uint32_t> vocab;
@@ -101,8 +104,6 @@ private:
   void decompose(const string s, vector<string> &newSubwords, bool isFinal);
   void limitVocab(const vector<string> &subwords, vector<string> &newSubwords);
   string process_bpe(vector<string> &subwords);
-  string apply(string &sentence);
-  vector<string> apply(vector<string> &sentences);
 };
 
 class BPEInference : public BPETrainer {
