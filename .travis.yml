@@ -10,9 +10,11 @@ before_install:
 before_script:
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake -DBUILD_TEST=ON ..
 
 script: 
     - make
 
+after_success:
+    - make test
 

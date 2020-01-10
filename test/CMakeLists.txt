@@ -11,7 +11,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 set(SOURCES "flexbpe_test.cpp")
 add_executable(flexbpe-gtest ${SOURCES})
 target_link_libraries(flexbpe-gtest gtest gtest_main flexbpe )
-gtest_discover_tests(flexbpe-gtest WORKING_DIRECTORY .)
+gtest_discover_tests(flexbpe-gtest WORKING_DIRECTORY $<TARGET_FILE_DIR:flexbpe-gtest>)
 
 add_custom_command(TARGET flexbpe-gtest PRE_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy_directory
