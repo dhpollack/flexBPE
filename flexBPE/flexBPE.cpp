@@ -8,8 +8,9 @@ const size_t kMaxPairs = 1000 * 1000 * 1000;
 BPETrainer::BPETrainer(const char *jEndWord, const size_t jEndWordLength,
                        const char *jTokenDelim, const size_t jTokenDelimLength,
                        const size_t jThreads)
-    : jThreads(jThreads), jEndWord(jEndWord), jEndWordLength(jEndWordLength),
-      jTokenDelim(jTokenDelim), jTokenDelimLength(jTokenDelimLength) {}
+    : jEndWord(jEndWord), jEndWordLength(jEndWordLength),
+      jTokenDelim(jTokenDelim), jTokenDelimLength(jTokenDelimLength),
+      jThreads(jThreads) {}
 
 int BPETrainer::safeOpen(const char *file_path, int flags, mode_t mode = 0) {
   int fd = open(file_path, flags, mode);
@@ -40,7 +41,7 @@ void BPETrainer::readText(const char *fp,
   };
 
   if (string(fp).compare("-") == 0) {
-    for (std::string line; std::getline(std::cin, line);) {
+    for (string line; getline(cin, line);) {
       for (char c : line) {
         deal_with_char(c);
       }
@@ -101,7 +102,7 @@ BPETrainer::output_or_count(unordered_map<string, string> &bpe, size_t size,
       cur_word.push_back(cur_char);
     }
   }
-  return std::make_pair(charOut, total);
+  return make_pair(charOut, total);
 }
 
 void BPETrainer::outputText(const char *fpo, const char *fp,
@@ -253,37 +254,27 @@ void BPETrainer::getvocab(const char *inputFile1, const char *inputFile2,
   if (strcmp(inputFile2, "") != 0) {
     readText(inputFile2, word_count);
   }
+  vocab = word_count;
 
-  // sort vocab
-  auto compFunctor = [](pair<string, int> elem1, pair<string, int> elem2) {
-    return elem1.second > elem2.second ||
-           (elem1.second == elem2.second && elem1.first < elem2.first);
-  };
-  set<pair<string, int>, decltype(compFunctor)> sorted_vocab(
-      word_count.begin(), word_count.end(), compFunctor);
-  assert(word_count.size() == sorted_vocab.size());
-
-  // added sorted vocab
-  for (auto element : sorted_vocab) {
-    vocab[element.first] = element.second;
-    if (output_vocab)
+  // print sorted vocab if necessary
+  if (output_vocab) {
+    auto sorted_vocab = get_sortedvocab();
+    for (auto element : sorted_vocab)
       cout << element.first << " " << element.second << endl;
   }
 }
 
-void BPETrainer::printvocab() {
-  for (auto element : vocab)
-    cout << element.first << " " << element.second << endl;
-}
-
 void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
-                            const char *inputFile2, const bool output_codes) {
+                            const char *inputFile2, const bool replace_vocab,
+                            const bool output_codes) {
   // get vocab
   unordered_map<string, uint32_t> word_count;
   readText(inputFile1, word_count);
   if (strcmp(inputFile2, "") != 0) {
     readText(inputFile2, word_count);
   }
+  if (replace_vocab)
+    vocab = word_count;
 
   // a token is an int, it represents a string
   unordered_map<string, uint32_t> token_to_int;
@@ -307,7 +298,8 @@ void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
     count_in_word(words[wi], wi, counts[wi], pair_counts, contiguous_counts,
                   where_to_update);
   }
-  vector<string> codes_vec;
+  merges.clear();
+  merges.shrink_to_fit();
   find_maxp(contiguous_counts, max_p, max_c);
   for (size_t i = 0; i < kNPairs; i++) {
     // stop if no more merges can be made
@@ -325,7 +317,9 @@ void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
     codes[pair] = codes.size();
     reversed_codes[concat] = pair;
     auto new_token = int_to_token[max_p.first] + int_to_token[max_p.second];
-    cout << s1 << " " << s2 << " " << max_c << endl;
+    merges.push_back(make_pair(s1, s2));
+    if (output_codes)
+      cout << s1 << " " << s2 << " " << max_c << endl;
 
     uint32_t new_token_id = int_to_token.size();
     int_to_token.push_back(new_token);
@@ -398,11 +392,44 @@ void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
   }
 }
 
-void BPETrainer::printcodes() {
+set<pair<string, int>, decltype(compFunctor)> BPETrainer::get_sortedvocab() {
+  // sort vocab
+  set<pair<string, int>, decltype(compFunctor)> sorted_vocab(
+      vocab.begin(), vocab.end(), compFunctor);
+  assert(vocab.size() == sorted_vocab.size());
+  return sorted_vocab;
+}
+
+void BPETrainer::save_vocab(const char *outputFile) {
+  fstream fdOut(outputFile, fdOut.trunc | fdOut.in | fdOut.out);
+  if (!fdOut.is_open()) {
+    cerr << "failed to open " << outputFile << " while saving vocab." << endl;
+  } else {
+    auto sorted_vocab = get_sortedvocab();
+    for (const auto &element : sorted_vocab)
+      fdOut << element.first << " " << element.second << endl;
+  }
+}
+
+void BPETrainer::save_merges(const char *outputFile) {
   // TODO: sort unordered_map before printing
-  for (auto element : codes)
-    cout << element.first.first << " " << element.first.second << " "
-         << element.second << endl;
+  fstream fdOut(outputFile, fdOut.trunc | fdOut.in | fdOut.out);
+  if (!fdOut.is_open()) {
+    cerr << "failed to open " << outputFile << " while saving merges." << endl;
+  } else {
+    for (auto element : merges)
+      fdOut << element.first << " " << element.second << endl;
+  }
+}
+
+void BPETrainer::save_trained(const char *outputDir) {
+
+  string vocab_file(outputDir);
+  vocab_file += "/vocab.txt";
+  string merges_file(outputDir);
+  merges_file.append("/merges.txt");
+  save_vocab(vocab_file.c_str());
+  save_merges(merges_file.c_str());
 }
 
 void BPETrainer::split(vector<string> &splits, const string &text, char sep) {
@@ -429,9 +456,9 @@ void BPETrainer::readVocab(const char *fp,
   while (getline(file, line)) {
     vector<string> splits;
     split(splits, line, ' ');
-    assert(splits.size() == 2);
+    assert(splits.size() == 2 || splits.size() == 1);
     assert(voc.find(splits[0]) == voc.end());
-    int count = stoi(splits[1]);
+    int count = splits.size() == 2 ? stoi(splits[1]) : voc.size();
     voc[splits[0]] = count;
     total += count;
   }
@@ -452,7 +479,7 @@ void BPETrainer::readCodes(const char *fp,
   while (getline(file, line)) {
     vector<string> splits;
     split(splits, line, ' ');
-    assert(splits.size() == 3);
+    assert(splits.size() == 3 || splits.size() == 2);
     auto pair = make_pair(splits[0], splits[1]);
     string concat = splits[0] + splits[1];
     assert(co.find(pair) == co.end());
@@ -614,12 +641,12 @@ void BPETrainer::applybpe(const char *outputFile, const char *inputFile) {
 }
 
 void BPETrainer::applybpe_stream() {
-  std::string line;
-  while (std::getline(std::cin, line)) {
+  string line;
+  while (getline(cin, line)) {
     vector<string> tmp;
     tmp.push_back(line);
     for (auto &l : apply(tmp)) {
-      std::cout << l << std::endl;
+      cout << l << endl;
     }
   }
 }
@@ -667,17 +694,11 @@ BPEInference::BPEInference(const char *codesPath, const char *vocabPath,
                            const size_t jThreads)
     : BPETrainer(jEndWord, jEndWordLength, jTokenDelim, jTokenDelimLength,
                  jThreads) {
-  unordered_map<string, uint32_t> voc;
   if (strcmp(vocabPath, "") != 0) {
-    readVocab(vocabPath, voc);
-    vocab = voc;
+    readVocab(vocabPath, vocab);
   }
 
-  unordered_map<tps, uint32_t, pair_hash> co;
-  unordered_map<string, tps> rco;
-  readCodes(codesPath, co, rco);
-  codes = co;
-  reversed_codes = rco;
+  readCodes(codesPath, codes, reversed_codes);
 };
 
 } // namespace flexBPE

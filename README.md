@@ -9,8 +9,21 @@ Right now this is basically just a copy of [fastBPE](https://github.com/glample/
 ## Installation
 
 ```sh
+# build
 mkdir build && cd build
 cmake ..
 make
+# install
 make install # optional
+```
+
+## Run Tests
+```sh
+mkdir build && cd build
+cmake -DCODE_COVERAGE=ON -DBUILD_TEST=ON -DCMAKE_BUILD_TYPE=Debug ..
+make
+ctest -VV
+../scripts/run_lcov.sh
+gcovr -r .. --html --html-details -o coverage.html
+# open coverage.html in your browser, it's in the build folder
 ```

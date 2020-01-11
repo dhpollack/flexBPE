@@ -38,6 +38,11 @@ using tp = pair<uint32_t, uint32_t>;
 using tps = pair<string, string>;
 using pc = unordered_map<tp, pair<int32_t, tp> *, pair_hash>;
 
+auto compFunctor = [](pair<string, int> elem1, pair<string, int> elem2) {
+  return elem1.second > elem2.second ||
+         (elem1.second == elem2.second && elem1.first < elem2.first);
+};
+
 class BPETrainer {
 public:
   explicit BPETrainer(const char *jEndWord = "</w>",
@@ -48,12 +53,12 @@ public:
                           max(1, min(10, int(thread::hardware_concurrency()))));
 
   void learncodes(const uint32_t kNPairs, const char *inputFile1,
-                  const char *inputFile2, const bool = false);
+                  const char *inputFile2, const bool replace_vocab = false,
+                  const bool output_codes = false);
   void printcodes();
 
   void getvocab(const char *inputFile1, const char *inputFile2,
                 const bool = false);
-  void printvocab();
 
   void applybpe(const char *outputFile, const char *inputFile);
 
@@ -63,6 +68,10 @@ public:
 
   void readCodes(const char *fp, unordered_map<tps, uint32_t, pair_hash> &codes,
                  unordered_map<string, tps> &reversed_codes);
+
+  void save_vocab(const char *outputFile);
+  void save_merges(const char *outputFile);
+  void save_trained(const char *outputDir);
 
   string apply(string &sentence);
 
@@ -80,6 +89,8 @@ private:
   const char *jTokenDelim;
   const size_t jTokenDelimLength;
   const size_t jThreads;
+  // storage for serializing codes
+  vector<pair<string, string>> merges;
   // private functions
   int safeOpen(const char *file_path, int flags, mode_t mode);
   void readText(const char *fp, unordered_map<string, uint32_t> &word_count);
@@ -104,6 +115,7 @@ private:
   void decompose(const string s, vector<string> &newSubwords, bool isFinal);
   void limitVocab(const vector<string> &subwords, vector<string> &newSubwords);
   string process_bpe(vector<string> &subwords);
+  set<pair<string, int>, decltype(compFunctor)> get_sortedvocab();
 };
 
 class BPEInference : public BPETrainer {
