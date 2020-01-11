@@ -298,8 +298,6 @@ void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
     count_in_word(words[wi], wi, counts[wi], pair_counts, contiguous_counts,
                   where_to_update);
   }
-  merges.clear();
-  merges.shrink_to_fit();
   find_maxp(contiguous_counts, max_p, max_c);
   for (size_t i = 0; i < kNPairs; i++) {
     // stop if no more merges can be made
