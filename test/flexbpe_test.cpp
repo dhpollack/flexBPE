@@ -60,7 +60,7 @@ TEST(trainerTest, learncodes_twofiles) {
 TEST(trainerTest, learncodes_shortstop) {
   BPETrainer trainer = BPETrainer();
   int num_merges = 1000000;
-  trainer.learncodes(num_merges, corpus, "", false, true);
+  trainer.learncodes(num_merges, "assets/corpus.txt", "", false, true);
   EXPECT_LT(trainer.codes.size(), num_merges);
 }
 
