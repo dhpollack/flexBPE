@@ -1,6 +1,6 @@
 # flexBPE - a flexible Byte Pair Encoder based on fastBPE
 
-[![Build Status](https://travis-ci.org/dhpollack/flexBPE.svg?branch=master)](https://travis-ci.org/dhpollack/flexBPE)
+[![Build Status](https://travis-ci.org/dhpollack/flexBPE.svg?branch=master)](https://travis-ci.org/dhpollack/flexBPE)  [![codecov](https://codecov.io/gh/dhpollack/flexBPE/branch/master/graph/badge.svg)](https://codecov.io/gh/dhpollack/flexBPE)
 
 ## Description
 
