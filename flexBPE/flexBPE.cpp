@@ -3,14 +3,12 @@
 namespace flexBPE {
 using namespace std;
 
-const size_t kMaxPairs = 1000 * 1000 * 1000;
-
 BPETrainer::BPETrainer(const char *jEndWord, const size_t jEndWordLength,
                        const char *jTokenDelim, const size_t jTokenDelimLength,
-                       const size_t jThreads)
+                       const size_t jThreads, const size_t jMaxPairs)
     : jEndWord(jEndWord), jEndWordLength(jEndWordLength),
       jTokenDelim(jTokenDelim), jTokenDelimLength(jTokenDelimLength),
-      jThreads(jThreads) {}
+      jThreads(jThreads), jMaxPairs(jMaxPairs) {}
 
 int BPETrainer::safeOpen(const char *file_path, int flags, mode_t mode = 0) {
   int fd = open(file_path, flags, mode);
@@ -286,7 +284,7 @@ void BPETrainer::learncodes(const uint32_t kNPairs, const char *inputFile1,
   tokenize(word_count, token_to_int, int_to_token, words, counts);
 
   vector<pair<int32_t, tp>> contiguous_counts;
-  contiguous_counts.reserve(kMaxPairs);
+  contiguous_counts.reserve(jMaxPairs);
 
   pc pair_counts;
   unordered_map<tp, unordered_set<uint32_t>, pair_hash> where_to_update;
@@ -689,9 +687,10 @@ BPEInference::BPEInference(const char *codesPath, const char *vocabPath,
                            const char *jEndWord, const size_t jEndWordLength,
                            const char *jTokenDelim,
                            const size_t jTokenDelimLength,
-                           const size_t jThreads)
+                           const size_t jThreads,
+                           const size_t jMaxPairs)
     : BPETrainer(jEndWord, jEndWordLength, jTokenDelim, jTokenDelimLength,
-                 jThreads) {
+                 jThreads, jMaxPairs) {
   if (strcmp(vocabPath, "") != 0) {
     readVocab(vocabPath, vocab);
   }

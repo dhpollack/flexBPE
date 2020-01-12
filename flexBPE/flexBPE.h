@@ -50,7 +50,8 @@ public:
                       const char *jTokenDelim = "@@",
                       const size_t jTokenDelimLength = 2,
                       const size_t jThreads =
-                          max(1, min(10, int(thread::hardware_concurrency()))));
+                          max(1, min(10, int(thread::hardware_concurrency()))),
+                      const size_t jMaxPairs = 10000000);
 
   void learncodes(const uint32_t kNPairs, const char *inputFile1,
                   const char *inputFile2, const bool replace_vocab = false,
@@ -89,6 +90,7 @@ private:
   const char *jTokenDelim;
   const size_t jTokenDelimLength;
   const size_t jThreads;
+  const size_t jMaxPairs;
   // storage for serializing codes
   vector<pair<string, string>> merges;
   // private functions
@@ -125,7 +127,8 @@ public:
       const char *jEndWord = "</w>", const size_t jEndWordLength = 4,
       const char *jTokenDelim = "@@", const size_t jTokenDelimLength = 2,
       const size_t jThreads = max(1, min(10,
-                                         int(thread::hardware_concurrency()))));
+                                         int(thread::hardware_concurrency()))),
+      const size_t jMaxPairs = 10000000);
 };
 
 } // end namespace flexBPE
