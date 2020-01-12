@@ -45,9 +45,10 @@ TEST(trainerTest, getvocab_twofiles) {
 }
 
 TEST(trainerTest, learncodes) {
-  BPETrainer trainer = BPETrainer();
-  trainer.learncodes(10, corpus, "", false, true);
-  EXPECT_EQ(trainer.codes.size(), 10);
+  BPETrainer *trainer = new BPETrainer();
+  trainer->learncodes(10, corpus, "", false, true);
+  EXPECT_EQ(trainer->codes.size(), 10);
+  delete trainer;
 }
 
 TEST(trainerTest, learncodes_twofiles) {
